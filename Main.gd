@@ -8,18 +8,27 @@ onready var timber = get_node("Timber")
 onready var camera = get_node("Camera")
 onready var barris = get_node("Barris")
 onready var destBarris = get_node("DestBarris")
+onready var barra = get_node("Barra")
+onready var labelPontos = get_node("Control/Pontos")
 
 var ultini
+var pontos = 0
+var estado = JOGANDO
+
+const JOGANDO = 1
+const PERDEU = 2
 
 func _ready():
 	randomize()
 	set_process_input(true)
 	gerarIni()
+	
+	barra.connect("perdeu", self, "perder")
 
 func _input(event):
 	event = camera.make_input_local(event)
-	if event.is_action_pressed("touch"):
-	#if event.type == InputEventScreenTouch and event.pressed:
+	#if event.is_action_pressed("touch") and estado == JOGANDO:
+	if event is InputEventScreenTouch and event.pressed and estado == JOGANDO:
 		if event.position.x < 360:
 			timber.esq()
 		else:
@@ -34,6 +43,10 @@ func _input(event):
 			
 			aleaBarril(Vector2(360, 1090 - 10*172))
 			descer()
+			
+			barra.add(0.014)
+			pontos += 1
+			labelPontos.set_text(str(pontos))
 			
 			if verif():
 				perder()
@@ -83,3 +96,9 @@ func descer():
 
 func perder():
 	timber.morrer()
+	barra.set_process(false)
+	estado = PERDEU
+	get_node("Timer").start()
+
+func _on_Timer_timeout():
+	get_tree().reload_current_scene()
